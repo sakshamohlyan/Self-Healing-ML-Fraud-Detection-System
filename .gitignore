@@ -1,0 +1,11 @@
+# Dataset — too large for GitHub, download from Kaggle
+data/
+
+# Generated at runtime — different on every machine
+logs/
+models/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
