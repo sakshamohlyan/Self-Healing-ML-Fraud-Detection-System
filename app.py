@@ -13,12 +13,12 @@ running = True
 _retraining = False
 
 def run_retrain():
-    """Retrains in a background thread so pipeline never blocks."""
+
     global _retraining
     print("[Retrain] Starting background retraining...")
     retrain()
-    reload_model()    # SUGGESTION 1: pull new model into memory after retrain
-    reset_history()   # reset drift window so it doesn't re-trigger immediately
+    reload_model()
+    reset_history()
     _retraining = False
     print("[Retrain] Done. Pipeline continues normally.")
 
@@ -31,7 +31,7 @@ def pipeline():
         if data is None:
             continue
 
-        # data is a pandas Series from itertuples → drop "Class" label only
+
         features = data.drop("Class").values
         prediction = predict(features)
 

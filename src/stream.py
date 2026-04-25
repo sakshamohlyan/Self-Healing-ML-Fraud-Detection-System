@@ -3,16 +3,14 @@ import time
 import queue
 import random
 
-# Bounded queue — blocks naturally if pipeline is slower than stream
+
 data_queue = queue.Queue(maxsize=100)
 
 def start_stream():
     df = pd.read_csv("data/fraud.csv")
 
     while True:
-        # SUGGESTION 4: itertuples() is 10x faster than iterrows().
-        # iterrows() boxes each value into a Python object on every iteration.
-        # itertuples() returns a lightweight named tuple instead.
+
         for row in df.itertuples(index=False):
             row = pd.Series(row._asdict())
 

@@ -4,31 +4,23 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="ML Monitoring Dashboard", layout="wide")
 
-# ── LAG FIX 1: Replace while True + time.sleep() with st_autorefresh ─────────
-# while True tears down and rebuilds every widget from scratch every 3 seconds.
-# st_autorefresh triggers a clean Streamlit rerun instead — much smoother.
-# Install: pip install streamlit-autorefresh
+
 st_autorefresh(interval=5000, key="dashboard_refresh")  # every 5 seconds
 
 st.title("📊 Real-Time ML Fraud Detection Dashboard")
 
 try:
-    # ── LAG FIX 2: Read full CSV for metrics, but cap chart data ─────────────
-    # st.line_chart serializes the entire array to JSON and sends it to the
-    # browser on every refresh. At 50k rows that's 1MB per refresh — visible lag.
-    # Charts never need more than 1000 points to look meaningful.
-    # Metrics still use the full dataframe so the counters are always accurate.
+
     df = pd.read_csv("logs/predictions.csv")
 
     total_predictions = len(df)
     total_frauds      = int(df["prediction"].sum())
     fraud_rate        = df["prediction"].mean()
 
-    # Actual live stream rate calculated from log timestamps if available,
-    # otherwise derived from row count (pipeline runs ~3.3 rows/sec)
+
     rows_per_sec = total_predictions / max(total_predictions / 3.3, 1)
 
-    # Cap chart data to last 1000 rows — visually identical, 50x less data sent
+
     chart_df = df.tail(1000).reset_index(drop=True)
 
     # ── METRICS ───────────────────────────────────────────────────────────────
@@ -59,8 +51,7 @@ try:
     st.markdown("---")
 
     # ── ROLLING FRAUD RATE CHART ──────────────────────────────────────────────
-    # LAG FIX 3: Only last 1000 points sent to browser instead of full history.
-    # A line chart with 1000 points is visually identical to one with 50,000.
+
     st.subheader("📈 Rolling Fraud Rate — last 1,000 transactions (window=50)")
     st.caption(
         "Each point = fraud rate over previous 50 transactions. "

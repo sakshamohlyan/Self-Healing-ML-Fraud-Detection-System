@@ -7,9 +7,7 @@ import joblib
 MODEL_PATH = "models/model.pkl"
 
 def retrain():
-    # SUGGESTION 2a: Retrain on recent logged predictions (last 5000 rows)
-    # so the model adapts to current data, not the original 284k row dataset.
-    # Falls back to fraud.csv if not enough logged data yet.
+
     try:
         df = pd.read_csv("logs/predictions.csv").tail(5000)
         if len(df) < 100:
@@ -31,13 +29,11 @@ def retrain():
         X, y, test_size=0.2, random_state=42
     )
 
-    # SUGGESTION 2b: class_weight="balanced" was missing from retrain —
-    # the retrained model was worse than the original. Now consistent with train.py.
+
     new_model = RandomForestClassifier(n_estimators=50, class_weight="balanced", random_state=42)
     new_model.fit(X_train, y_train)
 
-    # SUGGESTION 5: Only save new model if it's at least as good as current one.
-    # Prevents a bad retrain from silently degrading production performance.
+
     try:
         old_model = joblib.load(MODEL_PATH)
         score_before = f1_score(y_test, old_model.predict(X_test), zero_division=0)
@@ -50,6 +46,6 @@ def retrain():
             print(f"[Retrain] New model worse (F1 {score_after:.3f} < {score_before:.3f}). Keeping old model.")
 
     except Exception:
-        # No existing model to compare against — just save
+
         joblib.dump(new_model, MODEL_PATH)
         print("[Retrain] No previous model found. Saved new model.")
