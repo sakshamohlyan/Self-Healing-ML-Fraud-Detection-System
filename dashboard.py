@@ -5,22 +5,12 @@ import time
 
 st.set_page_config(page_title="ML Monitoring Dashboard", layout="wide")
 
-# replace streamlit-autorefresh entirely — it breaks on Python 3.11+
-# this meta tag tells the browser to reload the page every 5 seconds
-st.markdown(
-    '<meta http-equiv="refresh" content="5">',
-    unsafe_allow_html=True
-)
-
 st.title("📊 Real-Time ML Fraud Detection Dashboard")
 
 LOG_FILE = "logs/predictions.csv"
 
-# generate demo data if no live pipeline is running (deployed server)
-# regenerate every refresh so counter keeps growing
+# regenerate demo data on every run so counter grows like a live pipeline
 import demo_data
-if False:
-    import demo_data
 
 try:
     df = pd.read_csv(LOG_FILE)
@@ -89,3 +79,7 @@ try:
 
 except Exception as e:
     st.error(f"Dashboard error: {e}")
+
+
+time.sleep(5)
+st.rerun()

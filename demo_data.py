@@ -7,24 +7,32 @@ os.makedirs("logs", exist_ok=True)
 
 LOG_FILE = "logs/predictions.csv"
 
-# generate a row count that grows over time based on current timestamp
-# this makes the dashboard look like a live pipeline is running
-# 3.3 rows/sec starting from a fixed reference point
-REFERENCE_TIME = 1700000000  # fixed past timestamp
-rows_since_start = int((time.time() - REFERENCE_TIME) * 3.3)
-n = min(rows_since_start, 50000)  # cap at 50k so page stays fast
 
-np.random.seed(int(time.time()) // 300)  # changes seed every 5 mins
+START_FILE = "logs/demo_start_time.txt"
+
+if not os.path.exists(START_FILE):
+    with open(START_FILE, "w") as f:
+        f.write(str(time.time()))
+
+with open(START_FILE, "r") as f:
+    start_time = float(f.read().strip())
+
+# grow at 3.3 rows/sec from when the server first started
+seconds_running = time.time() - start_time
+n = max(100, min(int(seconds_running * 3.3), 10000))  # cap at 10k for performance
+
+np.random.seed(42)
 
 predictions = np.zeros(n, dtype=int)
 
-# inject fraud clusters
+# inject fraud clusters proportional to data size
 num_clusters = max(1, n // 500)
-cluster_centers = np.random.choice(range(50, n-50), num_clusters, replace=False)
-for center in cluster_centers:
-    for i in range(center - 3, center + 4):
-        if 0 <= i < n:
-            predictions[i] = 1
+if n > 100:
+    cluster_centers = np.random.choice(range(50, n - 50), num_clusters, replace=False)
+    for center in cluster_centers:
+        for i in range(center - 3, center + 4):
+            if 0 <= i < n:
+                predictions[i] = 1
 
 # sparse random frauds
 for i in range(n):
@@ -44,4 +52,4 @@ df["Class"] = 0
 df["prediction"] = predictions
 
 df.to_csv(LOG_FILE, index=False)
-print(f"Demo data: {n} rows, {predictions.sum()} frauds")
+print(f"Demo: {n} rows ({seconds_running:.0f}s running), {predictions.sum()} frauds")
