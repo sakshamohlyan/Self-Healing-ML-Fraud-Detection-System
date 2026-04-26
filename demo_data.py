@@ -1,33 +1,39 @@
 import pandas as pd
 import numpy as np
 import os
+import time
 
-# generates a realistic pre-baked predictions.csv so the dashboard
-# looks live even without the pipeline running on the server
-np.random.seed(42)
 os.makedirs("logs", exist_ok=True)
 
-n = 2000
+LOG_FILE = "logs/predictions.csv"
 
-# simulate realistic fraud pattern — 0.17% base rate with occasional clusters
+# generate a row count that grows over time based on current timestamp
+# this makes the dashboard look like a live pipeline is running
+# 3.3 rows/sec starting from a fixed reference point
+REFERENCE_TIME = 1700000000  # fixed past timestamp
+rows_since_start = int((time.time() - REFERENCE_TIME) * 3.3)
+n = min(rows_since_start, 50000)  # cap at 50k so page stays fast
+
+np.random.seed(int(time.time()) // 300)  # changes seed every 5 mins
+
 predictions = np.zeros(n, dtype=int)
 
-# inject 4 fraud clusters at random positions (simulates drift periods)
-for cluster_center in [300, 750, 1200, 1700]:
-    for i in range(cluster_center - 3, cluster_center + 4):
+# inject fraud clusters
+num_clusters = max(1, n // 500)
+cluster_centers = np.random.choice(range(50, n-50), num_clusters, replace=False)
+for center in cluster_centers:
+    for i in range(center - 3, center + 4):
         if 0 <= i < n:
             predictions[i] = 1
 
-# base fraud rate — random sparse frauds
+# sparse random frauds
 for i in range(n):
     if predictions[i] == 0 and np.random.random() < 0.001:
         predictions[i] = 1
 
-# generate realistic feature values matching fraud.csv schema
 V_cols = {f"V{i}": np.random.randn(n) for i in range(1, 29)}
 amounts = np.random.exponential(scale=88, size=n)
 
-# spike amounts at fraud positions (makes the Amount chart look realistic)
 for i in range(n):
     if predictions[i] == 1:
         amounts[i] = amounts[i] * np.random.uniform(5, 15)
@@ -37,5 +43,5 @@ df["Amount"] = amounts
 df["Class"] = 0
 df["prediction"] = predictions
 
-df.to_csv("logs/predictions.csv", index=False)
-print(f"Demo data generated — {n} rows, {predictions.sum()} frauds ({predictions.mean()*100:.2f}%)")
+df.to_csv(LOG_FILE, index=False)
+print(f"Demo data: {n} rows, {predictions.sum()} frauds")
