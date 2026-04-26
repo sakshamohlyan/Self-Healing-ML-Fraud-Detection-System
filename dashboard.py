@@ -1,20 +1,24 @@
 import streamlit as st
 import pandas as pd
 import os
-from streamlit_autorefresh import st_autorefresh
+import time
 
 st.set_page_config(page_title="ML Monitoring Dashboard", layout="wide")
 
-# rerun every 5 seconds
-st_autorefresh(interval=5000, key="dashboard_refresh")
+# replace streamlit-autorefresh entirely — it breaks on Python 3.11+
+# this meta tag tells the browser to reload the page every 5 seconds
+st.markdown(
+    '<meta http-equiv="refresh" content="5">',
+    unsafe_allow_html=True
+)
 
 st.title("📊 Real-Time ML Fraud Detection Dashboard")
 
 LOG_FILE = "logs/predictions.csv"
 
-
+# generate demo data if no live pipeline is running (deployed server)
 if not os.path.exists(LOG_FILE):
-    import demo_data  # runs the generator once on first load
+    import demo_data
 
 try:
     df = pd.read_csv(LOG_FILE)
