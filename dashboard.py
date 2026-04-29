@@ -8,9 +8,7 @@ st.set_page_config(page_title="ML Monitoring Dashboard", layout="wide")
 
 st.title("📊 Real-Time ML Fraud Detection Dashboard")
 
-# st.session_state persists across refreshes for the same browser session
-# so the counter grows naturally as the user watches the dashboard
-# new visitors start at a realistic base (2000) and grow from there
+
 if "start_rows" not in st.session_state:
     st.session_state.start_rows = 2000          # realistic starting point
     st.session_state.session_start = time.time()
@@ -21,7 +19,7 @@ current_rows = int(st.session_state.start_rows + seconds_elapsed * 3.3)
 current_rows = min(current_rows, 10000)         # cap at 10k for performance
 
 # generate data for current row count
-df = generate(current_rows)
+df = generate(current_rows) #df = pd.read_csv("logs/predictions.csv")
 
 total_predictions = len(df)
 total_frauds      = int(df["prediction"].sum())
@@ -89,6 +87,6 @@ if fraud_df.empty:
 else:
     st.dataframe(fraud_df, use_container_width=True)
 
-# smooth refresh — renders fully first, then waits, then reruns
+
 time.sleep(5)
 st.rerun()
